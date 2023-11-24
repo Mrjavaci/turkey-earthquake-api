@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,6 +13,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+Route::get('earth-quakes/years', [\App\Http\Controllers\EarthQuakesController::class, 'getYears']);
+Route::get('earth-quakes/months', [\App\Http\Controllers\EarthQuakesController::class, 'getMonths']);
+Route::get('earth-quakes/days', [\App\Http\Controllers\EarthQuakesController::class, 'getDays']);
+
+
+Route::apiResource('earth-quakes', \App\Http\Controllers\EarthQuakesController::class)
+    ->only('index', 'show');
