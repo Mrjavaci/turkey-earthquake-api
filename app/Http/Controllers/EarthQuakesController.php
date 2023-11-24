@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Arr;
 
 class EarthQuakesController extends ApiCrud
 {
@@ -19,7 +20,8 @@ class EarthQuakesController extends ApiCrud
     {
         $request->merge([
             'paginate' => true,
-            'per_page' => $request->input('per_page', 50)
+            'per_page' => $request->input('per_page', 50),
+            self::JUST_PAGINATOR_KEY => true,
         ]);
         $this->overrideModelFunctions = [
             'index' => [
@@ -28,7 +30,8 @@ class EarthQuakesController extends ApiCrud
                 },
             ],
         ];
-        return parent::index($request);
+        $pagination = parent::index($request);
+        return $this->addParamsToPagination($pagination);
     }
 
 
@@ -41,11 +44,17 @@ class EarthQuakesController extends ApiCrud
         return parent::index($request);
     }
 
+    protected function addParamsToPagination(Collection|LengthAwarePaginator|JsonResponse $pagination): LengthAwarePaginator
+    {
+        return $pagination->appends(Arr::only(request()->query(), array_keys($this->validationRules)));
+    }
+
     public function getMonths(Request $request)
     {
         $request->merge([
             'paginate' => true,
-            'per_page' => $request->input('per_page', 50)
+            'per_page' => $request->input('per_page', 50),
+            self::JUST_PAGINATOR_KEY => true,
         ]);
         $this->validationRules = [
             'year' => 'required',
@@ -57,14 +66,17 @@ class EarthQuakesController extends ApiCrud
                 },
             ],
         ];
-        return parent::index($request);
+        $pagination = parent::index($request);
+        return $this->addParamsToPagination($pagination);
+
     }
 
     public function getDays(Request $request)
     {
         $request->merge([
             'paginate' => true,
-            'per_page' => $request->input('per_page', 50)
+            'per_page' => $request->input('per_page', 50),
+            self::JUST_PAGINATOR_KEY => true,
         ]);
         $this->validationRules = [
             'year' => 'required',
@@ -77,7 +89,8 @@ class EarthQuakesController extends ApiCrud
                 },
             ],
         ];
-        return parent::index($request);
+        $pagination = parent::index($request);
+        return $this->addParamsToPagination($pagination);
     }
 
     protected function getModel(): Model

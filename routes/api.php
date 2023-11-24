@@ -18,5 +18,6 @@ Route::get('earth-quakes/months', [\App\Http\Controllers\EarthQuakesController::
 Route::get('earth-quakes/days', [\App\Http\Controllers\EarthQuakesController::class, 'getDays']);
 
 
+
 Route::apiResource('earth-quakes', \App\Http\Controllers\EarthQuakesController::class)
     ->only('index', 'show');
