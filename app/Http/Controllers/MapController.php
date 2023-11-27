@@ -15,9 +15,8 @@ class MapController extends Controller
         $this->overrideRequestScheme();
         \header('Content-type: image/png');
         $quake = EarthQuake::query()->findOrFail($id);
-        (new OpenStreetMap(new LatLng($quake->getLat(), $quake->getLng()), 8, 1024, 768))
-            ->getImage()
-            ->displayPNG();
+        $image = (new MapImageHelper(collect($quake->get())))->getImage();
+        $image->displayPNG();
     }
 
     protected function overrideRequestScheme()
@@ -33,11 +32,10 @@ class MapController extends Controller
             $query->whereDay('date', $day);
         }
         $quakes = collect($query->get());
-        \header('Content-type: image/png');
 
         $image = (new MapImageHelper($quakes))->getImage();
 
-        $image->displayPNG();
+        return $image->response('png');
     }
 
 }

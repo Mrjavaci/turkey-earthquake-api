@@ -3,36 +3,65 @@
 namespace App\Helpers\Map;
 
 use App\Models\EarthQuake;
-use DantSu\OpenStreetMapStaticAPI\Circle;
 use DantSu\OpenStreetMapStaticAPI\LatLng;
 use DantSu\OpenStreetMapStaticAPI\OpenStreetMap;
 use Illuminate\Support\Collection;
+use Intervention\Image\Image;
+use Intervention\Image\ImageManager;
 
 class MapImageHelper
 {
+    public const MAX_NORMALIZE_DEPTH = 25;
 
     public function __construct(public Collection $quakes)
     {
     }
 
-    public function getImageOld()
+    public function getImage(): Image
     {
-        $maxAndMinCoordinates = $this->getMaxAndMinLatLng();
+        [[$maxLat, $maxLng], [$minLat, $minLng]] = $this->getMaxAndMinLatLng();
 
-        [$centerLat, $centerLng] = $this->getCenterLatLng($maxAndMinCoordinates);
+        $maxDepth = $this->getMaxDepth();
+        $minDepth = $this->getMinDepth();
 
-        $zoom = $this->getZoomOfMap($maxAndMinCoordinates);
-        $latlng = new LatLng($centerLat, $centerLng);
-        $openStreetMap = new OpenStreetMap($latlng, $zoom, 1024, 768);
-        $this->quakes->each(function (EarthQuake $quake) use ($openStreetMap) {
-            $openStreetMap->addDraw(new Circle(new LatLng($quake->getLat(), $quake->getLng()), '#000000', 15, 15));
+        $openStreetMap = OpenStreetMap::createFromBoundingBox(new LatLng($maxLat, $minLng), new LatLng($minLat, $maxLng), 1, 1024, 768);
+
+
+        $manager = new ImageManager(['driver' => 'imagick']);
+        $image = $manager->make($openStreetMap->getImage()->getDataPNG());
+        $this->quakes->each(function (EarthQuake $quake) use ($openStreetMap, $maxDepth, $minDepth,$image) {
+            $normalizedDepth = $this->normalizeDepth($quake->getDepth(), $maxDepth, $minDepth);
+            $color = $this->getStrokeColor($normalizedDepth);
+            $xy = $openStreetMap->getMapData()->convertLatLngToPxPosition(new LatLng($quake->getLat(),$quake->getLng()));
+            $image->circle($normalizedDepth,$xy->getX(),$xy->getY(),function ($draw) use ($color, $normalizedDepth) {
+                $draw->background($color);
+            });
+        });
+
+        return $image;
+        /*
+        $this->quakes->each(function (EarthQuake $quake) use ($openStreetMap, $maxDepth, $minDepth) {
+            $normalizedDepth = $this->normalizeDepth($quake->getDepth(), $maxDepth, $minDepth);
+            $color = $this->getStrokeColor($normalizedDepth);
+            $openStreetMap->addDraw(new Circle(new LatLng($quake->getLat(), $quake->getLng()), $color, $this->normalizeDepth($quake->getDepth(), $maxDepth, $minDepth), $color));
         });
         return $openStreetMap->getImage();
+        */
     }
 
     protected function getMaxAndMinLatLng(): array
     {
         return [[$this->quakes->max('lat'), $this->quakes->max('lng')], [$this->quakes->min('lat'), $this->quakes->min('lng')]];
+    }
+
+    protected function getMaxDepth(): float
+    {
+        return (float)$this->quakes->max('depth');
+    }
+
+    protected function getMinDepth(): float
+    {
+        return (float)$this->quakes->min('depth');
     }
 
     protected function getCenterLatLng(array $maxAndMinCoordinates)
@@ -58,33 +87,18 @@ class MapImageHelper
         return $zoom;
     }
 
-    public function getImage()
-    {
-        [[$maxLat, $maxLng], [$minLat, $minLng]] = $this->getMaxAndMinLatLng();
-
-        $maxDepth = $this->getMaxDepth();
-        $minDepth = $this->getMinDepth();
-
-        $openStreetMap = OpenStreetMap::createFromBoundingBox(new LatLng($maxLat, $minLng), new LatLng($minLat, $maxLng), 1, 1024, 768);
-        $this->quakes->each(function (EarthQuake $quake) use ($openStreetMap, $maxDepth, $minDepth) {
-            $openStreetMap->addDraw(new Circle(new LatLng($quake->getLat(), $quake->getLng()), '#000000', $this->normalizeDepth($quake->getDepth(), $maxDepth, $minDepth), '#FFFFFF'));
-        });
-        return $openStreetMap->getImage();
-    }
-
-    protected function getMaxDepth(): float
-    {
-        return (float)$this->quakes->max('depth');
-    }
-
-    protected function getMinDepth(): float
-    {
-        return (float)$this->quakes->min('depth');
-    }
-
-    public function normalizeDepth(float $depth, float $maxDepth, float $minDepth): float
+    protected function normalizeDepth(float $depth, float $maxDepth, float $minDepth): float
     {
         $normalizedValue = ($depth - $minDepth) / ($maxDepth - $minDepth);
-        return 1 + $normalizedValue * (25 - 1);
+        return 1 + $normalizedValue * (self::MAX_NORMALIZE_DEPTH - 1);
+    }
+
+    protected function getStrokeColor(float $normalizedDepth): string
+    {
+        $colors = config('colors.groups');
+        $colorIndex = floor($normalizedDepth / (self::MAX_NORMALIZE_DEPTH / count($colors)));
+        $colorIndex = min($colorIndex, count($colors) - 1);
+        $colorIndex = max($colorIndex, 0);
+        return $colors[$colorIndex];
     }
 }
