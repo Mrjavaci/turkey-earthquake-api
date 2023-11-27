@@ -39,14 +39,6 @@ class MapImageHelper
         });
 
         return $image;
-        /*
-        $this->quakes->each(function (EarthQuake $quake) use ($openStreetMap, $maxDepth, $minDepth) {
-            $normalizedDepth = $this->normalizeDepth($quake->getDepth(), $maxDepth, $minDepth);
-            $color = $this->getStrokeColor($normalizedDepth);
-            $openStreetMap->addDraw(new Circle(new LatLng($quake->getLat(), $quake->getLng()), $color, $this->normalizeDepth($quake->getDepth(), $maxDepth, $minDepth), $color));
-        });
-        return $openStreetMap->getImage();
-        */
     }
 
     protected function getMaxAndMinLatLng(): array
