@@ -30,9 +30,7 @@ class GetEarthQuakes extends Command
     public function handle()
     {
         $data = Http::get('http://udim.koeri.boun.edu.tr/zeqmap/');
-        $this->getMonthsFromData($data)->each(function (string $month) {
-            ProcessEarthQuakeData::dispatch($month);
-        });
+        $this->getMonthsFromData($data)->each(fn(string $month) => ProcessEarthQuakeData::dispatch($month));
 
     }
 
@@ -47,14 +45,16 @@ class GetEarthQuakes extends Command
         $re = '/<OPTION VALUE="(.*?)">(.*?)</ms';
         preg_match_all($re, $data, $matches, PREG_SET_ORDER, 0);
         unset($matches[0]);
-        return collect($matches)->map(function (array $item) {
-            return $item[2];
-        });
+        return collect($matches)->map(fn(array $item) => $item[2]);
     }
 
     protected function getSelectTagFromXml(string $body): string
     {
-        $re = '/<Select NAME="LBTEST"(.*?)<\/Select>/ms';
+
+        $re = /** @var $re
+         * @lang text
+         */
+            '/<Select NAME="LBTEST"(.*?)<\/Select>/ms';
 
         preg_match_all($re, $body, $matches, PREG_SET_ORDER, 0);
         return $matches[0][0];
