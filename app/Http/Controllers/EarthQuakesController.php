@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Helpers\ApiCrud;
+use App\Helpers\Api\ApiCrud;
 use App\Models\EarthQuake;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
