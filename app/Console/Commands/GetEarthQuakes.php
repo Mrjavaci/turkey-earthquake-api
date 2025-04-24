@@ -42,10 +42,10 @@ class GetEarthQuakes extends Command
 
     protected function getOptionTagsFromMonthSelect(string $data): Collection
     {
-        $re = '/<OPTION VALUE="(.*?)">(.*?)</ms';
+        $re = '/<OPTION VALUE="(.*?)">(.*?)/ms';
         preg_match_all($re, $data, $matches, PREG_SET_ORDER, 0);
         unset($matches[0]);
-        return collect($matches)->map(fn(array $item) => $item[2]);
+        return collect($matches)->map(fn(array $item) => $item[1]);
     }
 
     protected function getSelectTagFromXml(string $body): string
