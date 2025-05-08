@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Helpers;
+namespace App\Helpers\Api;
 
 use Exception;
 use Illuminate\Database\Eloquent\Builder;

@@ -6,14 +6,22 @@
         "laravel",
         "framework"
     ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/Mrjavaci/php-osm-static-api"
+        }
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "ext-simplexml": "*",
         "guzzlehttp/guzzle": "^7.2",
+        "intervention/image": "^2.7",
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
-        "ext-simplexml": "*"
+        "mrjavaci/php-osm-static-api": "dev-master"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

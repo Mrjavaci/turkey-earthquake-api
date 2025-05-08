@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Helpers;
+namespace App\Helpers\Api;
 
 use ArrayAccess;
 use Exception;
